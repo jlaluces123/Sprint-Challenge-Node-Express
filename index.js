@@ -53,3 +53,18 @@ server.post('/api/projects', (req, res) => {
     .catch(err => res.status(500).json({ networkError: 'There was an error in the server' }));
 });
 
+
+
+server.delete('/api/projects/:id', (req, res) => {
+  const { id } = req.params;
+
+  project.remove(id)
+    .then(response => {
+      if (response === 0) {
+        res.status(404).json({ missingError: 'err..... the id provided does not exist sowwy!' });
+      } else if (response === 1) {
+        res.status(200).json(response)
+      }
+    })
+    .catch(err => console.log(err));  
+});
