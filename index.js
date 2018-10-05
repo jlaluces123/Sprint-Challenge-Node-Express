@@ -49,6 +49,16 @@ server.get('/api/projects/:id', (req, res) => {
     .catch(err => console.log(err));
 });
 
+server.get('/api/projects/:id/actions', (req, res) => {
+  const { id } = req.params;
+
+  project.getProjectActions(id)
+    .then(response => {
+      res.status(200).json(response)
+    })
+    .catch(err => console.log(err));
+});
+
 
 server.post('/api/projects', (req, res) => {
   const { name, description } = req.body;
