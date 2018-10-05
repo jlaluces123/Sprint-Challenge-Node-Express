@@ -9,7 +9,7 @@ const port = 5202;
 
 server.use(cors()); // connects react
 server.use(express.json()); 
-server.use(logger('tiny'));
+server.use(logger('combined'));
 
 // LOGGERS
 
@@ -67,4 +67,31 @@ server.delete('/api/projects/:id', (req, res) => {
       }
     })
     .catch(err => console.log(err));  
+});
+
+
+
+server.put('/api/projects/:id', (req, res) => {
+  const { id } = req.params;
+  const { name, description } = req.body;
+  const toUpdate = { name, description };
+
+  project.update(id, toUpdate)
+    .then(response => {
+
+      if (!toUpdate.name || !toUpdate.description) {
+        console.log(response, 'response here:');
+        res.status(400).json({ fillError: 'Please provide an edit to the text, and name' });
+      } else if (response === 0) {
+        console.log(response, 'response here:');
+        res.status(404).json({ missingError: 'The post with the id you gave, does not exist' });
+      } else if (response === 1) {
+        console.log(response, 'response here:');
+        res.status(200).json(response);
+      }
+
+    })
+    .catch(err => {
+      res.status(500).json({ networkError: 'There was an error in the server'});
+    });
 });
