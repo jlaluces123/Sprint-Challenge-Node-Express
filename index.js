@@ -36,6 +36,19 @@ server.get('/api/projects', (req, res) => {
     .catch(err => res.send(err))
 });
 
+server.get('/api/projects/:id', (req, res) => {
+  const { id } = req.params;
+
+  project.get(id)
+    .then(eachProject => {
+      if (!eachProject) {
+        res.status(404).json({ missingError: 'Could not find project by the id given'})
+      }
+      res.status(200).json(eachProject);
+    })
+    .catch(err => console.log(err));
+});
+
 
 server.post('/api/projects', (req, res) => {
   const { name, description } = req.body;
@@ -73,25 +86,122 @@ server.delete('/api/projects/:id', (req, res) => {
 
 server.put('/api/projects/:id', (req, res) => {
   const { id } = req.params;
-  const { name, description } = req.body;
-  const toUpdate = { name, description };
+  const { name, description } = req.body;  
 
-  project.update(id, toUpdate)
+  project.update(id, { name, description })
+    .then(response => {
+      if (!req.body.name || !req.body.description) {
+        res.status(400).json({ fillError: 'Please fill a name and description, if you want to delete a project, use a delete function' });
+      } else if (id === undefined) {
+        res.status(404).json({ missingError: 'Id not found in database' });
+      }
+      res.status(200).json(response);
+    })
+    .catch(err => {
+      res.status(500).json({ networkError: 'There was an error in the server'});
+    });
+});
+
+
+
+
+
+
+
+
+
+
+// ACTIONS
+
+server.get('/api/actions', (req, res) => {
+  action.get()
+    .then(response => {
+      res.status(200).json(response);
+    })
+    .catch(err => res.status(500).json({ networkError: 'The actions could not be fetched' }));
+});
+
+
+
+
+server.get('/api/actions/:id', (req, res) => {
+  const { id } = req.params;
+
+  action.get(id)
+    .then(eachAction => {
+      res.status(200).json(eachAction);
+    })
+    .catch(err => console.log(err));
+});
+
+
+
+
+// adds an action to a project id
+server.post('/api/actions', (req, res) => {
+  const { project_id, description, notes } = req.body;  
+
+  action.insert({ project_id, description, notes })
     .then(response => {
 
-      if (!toUpdate.name || !toUpdate.description) {
-        console.log(response, 'response here:');
-        res.status(400).json({ fillError: 'Please provide an edit to the text, and name' });
-      } else if (response === 0) {
-        console.log(response, 'response here:');
-        res.status(404).json({ missingError: 'The post with the id you gave, does not exist' });
+      if (!req.body.project_id || !req.body.description || !req.body.notes) {
+        res.status(400).json({ fillError: 'Please make sure to add a project_id, a description, and notes' });
+      } else if (typeof req.body.project_id !== 'number') {
+        res.status(400).json({ typeError: 'invalid type, please enter a number (hint: remove quotation marks around number)' });
+      } else if (req.body.description.length > 128) {
+        res.status(400).json({ exceedError: 'Exceeded character limit (128 char.)' });
+      }
+
+      res.status(200).json(response);
+    })
+    .catch(err => {
+      res.status(500).json({ networkError: ' There was an error posting an action' });
+    });
+});
+
+
+
+
+
+
+
+server.delete('/api/actions/:id', (req, res) => {
+  const { id } = req.params;
+
+  action.remove(id)
+    .then(response => {
+
+      if (response === 0) {
+        res.status(404).json({ missingError: 'err... the id provided does not exist' });
       } else if (response === 1) {
-        console.log(response, 'response here:');
         res.status(200).json(response);
       }
 
     })
+    .catch(err => res.status(500).json({ networkError: 'There was an error removing the action' }));
+});
+
+
+
+
+
+server.put('/api/actions/:id', (req, res) => {
+  const { id } = req.params;
+  const { project_id, description, notes } = req.body; 
+
+  action.update(id, { project_id, description, notes })
+    .then(response => {
+
+      if (!req.body.project_id || !req.body.description || !req.body.notes) {
+        res.status(400).json({ fillError: 'Please make sure to add a project_id, a description, and notes' });
+      } else if (typeof req.body.project_id !== 'number') {
+        res.status(400).json({ typeError: 'invalid type, please enter a number (hint: remove quotation marks around number)' });
+      } else if (req.body.description.length > 128) {
+        res.status(400).json({ exceedError: 'Exceeded character limit (128 char.)' });
+      }
+      res.status(200).json(response);
+    })
     .catch(err => {
-      res.status(500).json({ networkError: 'There was an error in the server'});
+      res.status(500).json({ networkError: 'There was an error editing' });
     });
 });
