@@ -37,5 +37,19 @@ server.get('/api/projects', (req, res) => {
 });
 
 
+server.post('/api/projects', (req, res) => {
+  const { name, description } = req.body;
 
+  project.insert({ name, description })
+    .then(response => {
+      if (!req.body.name || !req.body.description) { // required check
+        res.status(400).json({ fillError: 'Please provide text, and/or userId' })
+      } else if (req.body.name.length > 128) { // 128 cap exceeded check
+        res.status(400).json({ lengthError: 'Please shorten name, max length exceeded (128 char.)' });
+      } else {
+        res.status(200).json(response);
+      }      
+    })
+    .catch(err => res.status(500).json({ networkError: 'There was an error in the server' }));
+});
 
